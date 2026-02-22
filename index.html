@@ -84,6 +84,34 @@
       position: relative;
       z-index: 2;
     }
+
+    .kehe-mini-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .26rem .55rem;
+      border-radius: 999px;
+      border: 1px solid var(--organic-border);
+      background: rgba(255,255,255,.78);
+      color: var(--organic-primary);
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+    .kehe-mini-logo .kehe-mark {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: inline-grid;
+      place-items: center;
+      background: var(--organic-primary);
+      color: #fff;
+      font-size: .56rem;
+      font-weight: 800;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
     #intro-screen.fade-out {
       opacity: 0; transform: scale(1.06); pointer-events: none;
     }
@@ -223,7 +251,7 @@
       font-weight: 800;
       color: var(--organic-primary);
       letter-spacing: .02em;
-      margin-right: auto;
+      margin-right: 0;
       flex-shrink: 0;
     }
     .nav-logo span { color: var(--organic-accent); }
@@ -232,6 +260,7 @@
       display: flex; gap: .25rem;
       list-style: none;
       flex-wrap: wrap;
+      margin-left: auto;
     }
     .nav-links a {
       color: #3f4940;
@@ -254,6 +283,10 @@
       border-radius: 20px !important;
     }
     .nav-cta:hover { background: #33573d !important; }
+
+    .nav-kehe-logo {
+      margin-left: .75rem;
+    }
 
     /* ─── Hero ──────────────────────────────────────────────────── */
     .hero {
@@ -636,9 +669,76 @@
 
     /* ─── Responsive ────────────────────────────────────────────── */
     @media (max-width: 680px) {
-      .nav-links { display: none; }
+      .intro-title {
+        font-size: clamp(1.45rem, 7.5vw, 2.15rem);
+        margin-bottom: 2.25rem;
+        padding: 0 .9rem;
+      }
+      .intro-tagline,
+      .intro-hint {
+        padding: 0 1rem;
+        text-align: center;
+      }
+
+      .nav-inner {
+        padding: .62rem .85rem;
+        flex-wrap: wrap;
+        row-gap: .55rem;
+      }
+      .nav-logo {
+        font-size: 1.05rem;
+      }
+      .nav-kehe-logo {
+        margin-left: auto;
+      }
+      .nav-links {
+        display: flex;
+        width: 100%;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: .4rem;
+        padding-bottom: .2rem;
+        -webkit-overflow-scrolling: touch;
+      }
+      .nav-links li {
+        flex: 0 0 auto;
+      }
+      .nav-links::-webkit-scrollbar {
+        height: 0;
+      }
+
+      .hero {
+        padding: 4rem 1rem 3rem;
+      }
+      .hero-badge {
+        font-size: .72rem;
+      }
+      .hero p {
+        font-size: 1rem;
+      }
+      .section {
+        padding: 3.35rem 1rem;
+      }
       .hero-cta-group .btn { flex: 1 1 100%; text-align: center; }
       .quiz-box { padding: 1.5rem; }
+    }
+
+    @media (max-width: 420px) {
+      .kehe-mini-logo {
+        font-size: .62rem;
+        padding: .24rem .48rem;
+      }
+      .kehe-mini-logo .kehe-mark {
+        width: 14px;
+        height: 14px;
+      }
+      .nav-logo {
+        font-size: .95rem;
+      }
+      .lock-icon {
+        width: 118px;
+        height: 118px;
+      }
     }
   </style>
 </head>
@@ -683,6 +783,10 @@
     <nav id="nav" aria-label="Main navigation">
       <div class="nav-inner">
         <div class="nav-logo">SnackSafe™ X KeHE</div>
+        <div class="kehe-mini-logo nav-kehe-logo" aria-label="KeHE logo">
+          <span class="kehe-mark">K</span>
+          <span>KeHE</span>
+        </div>
         <ul class="nav-links">
           <li><a href="#finder">Snack Finder</a></li>
           <li><a href="#builder">Safe Snack Builder</a></li>
@@ -852,6 +956,7 @@
                 <div class="chip" data-filter="gluten-free"  onclick="toggleChip(this)">🌾 Gluten Free</div>
                 <div class="chip" data-filter="soy-free"     onclick="toggleChip(this)">🫘 Soy Free</div>
                 <div class="chip" data-filter="egg-free"     onclick="toggleChip(this)">🥚 Egg Free</div>
+                <div class="chip" data-filter="alpha-gal-safe" onclick="toggleChip(this)">🛡 Alpha-Gal Safe</div>
               </div>
             </div>
 
@@ -1041,6 +1146,7 @@
         name: 'Organic Mango Chili Jerky',
         brand: 'Wild Roots × KeHE',
         tags: ['gluten-free','dairy-free','high-protein','organic-only'],
+        containsMammalByproducts: true,
         moods: ['energized','focused'],
         flavors: ['salty','filling'],
         hungers: ['medium','high'],
@@ -1052,6 +1158,7 @@
         name: 'Organic Dark Chocolate Almond Bites',
         brand: 'Theo Organics × KeHE',
         tags: ['vegan','gluten-free','organic-only'],
+        containsMammalByproducts: false,
         moods: ['relaxed','comfort'],
         flavors: ['sweet'],
         hungers: ['light','medium'],
@@ -1063,6 +1170,7 @@
         name: 'Organic Peanut-Free Energy Bar',
         brand: 'Larabar × KeHE',
         tags: ['nut-free','dairy-free','gluten-free','vegan','organic-only'],
+        containsMammalByproducts: false,
         moods: ['energized','focused'],
         flavors: ['sweet','filling'],
         hungers: ['medium','high'],
@@ -1074,6 +1182,7 @@
         name: 'Organic Popped Rice Crisps',
         brand: 'LesserEvil × KeHE',
         tags: ['gluten-free','vegan','low-sugar','organic-only'],
+        containsMammalByproducts: false,
         moods: ['relaxed','comfort'],
         flavors: ['salty','fresh'],
         hungers: ['light','medium'],
@@ -1085,6 +1194,7 @@
         name: 'Organic Cashew Butter Squeeze Pack',
         brand: 'Once Again × KeHE',
         tags: ['dairy-free','egg-free','vegan','keto','high-protein','organic-only'],
+        containsMammalByproducts: false,
         moods: ['energized','focused'],
         flavors: ['filling','fresh'],
         hungers: ['medium','high'],
@@ -1096,6 +1206,7 @@
         name: 'Organic Cold Brew Protein Shake',
         brand: 'REBBL × KeHE',
         tags: ['dairy-free','vegan','high-protein','organic-only'],
+        containsMammalByproducts: false,
         moods: ['energized','focused'],
         flavors: ['sweet','filling'],
         hungers: ['thirsty','medium'],
@@ -1159,16 +1270,24 @@
     function runBuilder() {
       var active = document.querySelectorAll('.chip.active');
       var filters = Array.prototype.map.call(active, function (c) { return c.getAttribute('data-filter'); });
+      var alphaGalSafeSelected = filters.indexOf('alpha-gal-safe') > -1;
 
       var matched = snackDatabase.filter(function (s) {
+        if (alphaGalSafeSelected && s.containsMammalByproducts) {
+          return false;
+        }
         if (filters.length === 0) return true;
         return filters.every(function (f) {
+          if (f === 'alpha-gal-safe') return true;
           return s.tags.indexOf(f) > -1;
         });
       });
 
       if (matched.length === 0) {
-        matched = snackDatabase.slice(0, 3); // fallback
+        matched = (alphaGalSafeSelected
+          ? snackDatabase.filter(function (s) { return !s.containsMammalByproducts; })
+          : snackDatabase
+        ).slice(0, 3); // fallback
       }
 
       renderBuilderResults(matched, filters);
