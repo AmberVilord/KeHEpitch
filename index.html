@@ -36,17 +36,44 @@
     /* ─── Lock / Intro Screen ───────────────────────────────────── */
     #intro-screen {
       position: fixed; inset: 0; z-index: 1000;
-      background: radial-gradient(ellipse at center, #0a3d20 0%, #06361f 42%, var(--kehe-blue-deep) 100%);
+      background: linear-gradient(180deg, #8cc8ea 0%, #4d93c6 35%, #1f5f8e 68%, #123f66 100%);
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       transition: opacity .8s ease, transform .8s ease;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    #intro-screen::before {
+      content: '';
+      position: absolute;
+      top: 10%;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,214,125,.6) 0%, rgba(255,214,125,.2) 36%, rgba(255,214,125,0) 70%);
+      z-index: 0;
+    }
+    #intro-screen::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 0;
+      height: 36vh;
+      background: linear-gradient(to top, #193f46 0%, #295965 100%);
+      clip-path: polygon(0 100%, 0 68%, 11% 58%, 20% 66%, 33% 46%, 43% 63%, 57% 42%, 67% 60%, 80% 44%, 91% 62%, 100% 54%, 100% 100%);
+      z-index: 0;
+      opacity: .95;
+    }
+    #intro-screen > *:not(.leaf-bg) {
+      position: relative;
+      z-index: 2;
     }
     #intro-screen.fade-out {
       opacity: 0; transform: scale(1.06); pointer-events: none;
     }
 
     .intro-tagline {
-      color: rgba(245,166,35,.9);
+      color: #0e2f5a;
+      text-shadow: 0 1px 2px rgba(255,255,255,.25);
       letter-spacing: .18em;
       font-size: .85rem;
       text-transform: uppercase;
@@ -123,19 +150,31 @@
       0%,100% { opacity: .35; } 50% { opacity: .75; }
     }
 
-    /* Leaf deco */
+    /* Mountain foreground layers */
     .leaf-bg {
-      position: absolute; inset: 0; overflow: hidden; pointer-events: none;
-    }
-    .leaf-bg span {
       position: absolute;
-      font-size: 1.6rem;
-      opacity: .08;
-      animation: floatLeaf linear infinite;
+      inset: auto 0 0;
+      height: 30vh;
+      pointer-events: none;
+      z-index: 1;
     }
-    @keyframes floatLeaf {
-      from { transform: translateY(110vh) rotate(0deg); }
-      to   { transform: translateY(-10vh) rotate(360deg); }
+    .leaf-bg::before,
+    .leaf-bg::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 0;
+      height: 100%;
+    }
+    .leaf-bg::before {
+      background: linear-gradient(to top, #1a4d3a 0%, #2f6a51 100%);
+      clip-path: polygon(0 100%, 0 82%, 13% 67%, 22% 77%, 31% 61%, 42% 79%, 54% 57%, 63% 71%, 77% 54%, 86% 70%, 100% 60%, 100% 100%);
+      opacity: .92;
+    }
+    .leaf-bg::after {
+      height: 70%;
+      background: linear-gradient(to top, #123a2c 0%, #20543f 100%);
+      clip-path: polygon(0 100%, 0 90%, 10% 78%, 19% 87%, 30% 72%, 40% 85%, 52% 68%, 63% 83%, 74% 70%, 86% 82%, 100% 74%, 100% 100%);
+      opacity: .95;
     }
 
     /* ─── MAIN SITE (hidden until unlock) ──────────────────────── */
@@ -892,21 +931,6 @@
        JAVASCRIPT
   ═══════════════════════════════════════════════════════════════════ -->
   <script>
-    /* ── Floating leaf background ───────────────────────────────── */
-    (function () {
-      var container = document.getElementById('leaf-container');
-      var leafChars = ['🌿', '🍃', '🌱'];
-      for (var i = 0; i < 18; i++) {
-        var s = document.createElement('span');
-        s.textContent = leafChars[i % 3];
-        s.style.left = (Math.random() * 100) + 'vw';
-        s.style.animationDuration = (10 + Math.random() * 18) + 's';
-        s.style.animationDelay = '-' + (Math.random() * 20) + 's';
-        s.style.fontSize = (1.2 + Math.random() * 1.4) + 'rem';
-        container.appendChild(s);
-      }
-    }());
-
     /* ── Lock / Unlock ──────────────────────────────────────────── */
     function unlockSite() {
       var lockSvg  = document.getElementById('lock-svg');
