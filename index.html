@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SnackSafe™ by KeHE</title>
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --kehe-green:       #006838;
+      --kehe-green-light: #00a651;
+      --kehe-green-pale:  #e8f5ee;
+      --kehe-gold:        #f5a623;
+      --kehe-dark:        #1c2b20;
+      --kehe-cream:       #f9f5ed;
+      --kehe-white:       #ffffff;
+      --kehe-gray:        #6b7b6e;
+      --kehe-red:         #c0392b;
+      --radius:           12px;
+      --shadow:           0 4px 24px rgba(0,104,56,.15);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--kehe-cream);
+      color: var(--kehe-dark);
+      overflow-x: hidden;
+    }
+    h1,h2,h3,h4 { line-height: 1.2; }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; border: none; font-family: inherit; }
+
+    /* ─── Lock / Intro Screen ───────────────────────────────────── */
+    #intro-screen {
+      position: fixed; inset: 0; z-index: 1000;
+      background: radial-gradient(ellipse at center, #0a3d20 0%, #051a0e 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      transition: opacity .8s ease, transform .8s ease;
+    }
+    #intro-screen.fade-out {
+      opacity: 0; transform: scale(1.06); pointer-events: none;
+    }
+
+    .intro-tagline {
+      color: rgba(255,255,255,.55);
+      letter-spacing: .18em;
+      font-size: .85rem;
+      text-transform: uppercase;
+      margin-bottom: 2.5rem;
+    }
+
+    .intro-title {
+      color: var(--kehe-white);
+      font-size: clamp(1.6rem, 5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .intro-title span { color: var(--kehe-green-light); }
+
+    /* Lock button */
+    #lock-btn {
+      background: none;
+      display: flex; flex-direction: column; align-items: center; gap: 1.4rem;
+      outline: none;
+      transition: transform .2s;
+    }
+    #lock-btn:hover { transform: scale(1.06); }
+    #lock-btn:focus-visible .lock-icon { outline: 3px solid var(--kehe-gold); border-radius: 8px; }
+
+    .lock-icon {
+      width: 130px; height: 130px;
+      position: relative;
+      filter: drop-shadow(0 8px 28px rgba(0,166,81,.5));
+      transition: filter .3s;
+    }
+    #lock-btn:hover .lock-icon {
+      filter: drop-shadow(0 12px 36px rgba(0,166,81,.75));
+    }
+
+    /* SVG lock parts */
+    .lock-shackle {
+      stroke: var(--kehe-green-light);
+      fill: none;
+      stroke-width: 10;
+      stroke-linecap: round;
+      transition: transform .5s cubic-bezier(.34,1.56,.64,1), opacity .5s;
+      transform-origin: 65px 48px;
+    }
+    .lock-body-rect { fill: var(--kehe-green); }
+    .lock-keyhole { fill: var(--kehe-green-light); }
+
+    /* Unlocked state */
+    .lock-icon.unlocked .lock-shackle {
+      transform: rotate(-50deg) translateY(-8px);
+    }
+
+    .lock-label {
+      color: var(--kehe-white);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      opacity: .85;
+      transition: opacity .3s;
+    }
+    #lock-btn:hover .lock-label { opacity: 1; color: var(--kehe-green-light); }
+
+    .intro-hint {
+      margin-top: 3.5rem;
+      color: rgba(255,255,255,.35);
+      font-size: .78rem;
+      letter-spacing: .08em;
+      text-align: center;
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: .35; } 50% { opacity: .75; }
+    }
+
+    /* Leaf deco */
+    .leaf-bg {
+      position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+    }
+    .leaf-bg span {
+      position: absolute;
+      font-size: 1.6rem;
+      opacity: .08;
+      animation: floatLeaf linear infinite;
+    }
+    @keyframes floatLeaf {
+      from { transform: translateY(110vh) rotate(0deg); }
+      to   { transform: translateY(-10vh) rotate(360deg); }
+    }
+
+    /* ─── MAIN SITE (hidden until unlock) ──────────────────────── */
+    #main-site {
+      opacity: 0;
+      transition: opacity .9s ease .3s;
+      min-height: 100vh;
+    }
+    #main-site.visible { opacity: 1; }
+
+    /* ─── Navigation Bar ────────────────────────────────────────── */
+    #nav {
+      position: sticky; top: 0; z-index: 500;
+      background: var(--kehe-green);
+      box-shadow: 0 2px 12px rgba(0,104,56,.3);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: auto;
+      display: flex; align-items: center;
+      padding: .75rem 1.5rem;
+      gap: 1rem;
+    }
+    .nav-logo {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: var(--kehe-white);
+      letter-spacing: .05em;
+      margin-right: auto;
+      flex-shrink: 0;
+    }
+    .nav-logo span { color: var(--kehe-gold); }
+
+    .nav-links {
+      display: flex; gap: .25rem;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      color: rgba(255,255,255,.85);
+      font-size: .88rem;
+      font-weight: 500;
+      padding: .45rem .85rem;
+      border-radius: 20px;
+      transition: background .2s, color .2s;
+      white-space: nowrap;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      background: rgba(255,255,255,.15);
+      color: var(--kehe-white);
+    }
+
+    .nav-cta {
+      background: var(--kehe-gold);
+      color: var(--kehe-dark) !important;
+      font-weight: 700 !important;
+      border-radius: 20px !important;
+    }
+    .nav-cta:hover { background: #e0951f !important; }
+
+    /* ─── Hero ──────────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, var(--kehe-green) 0%, #00522c 55%, #1c4a30 100%);
+      color: var(--kehe-white);
+      padding: 5rem 1.5rem 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-inner {
+      max-width: 860px; margin: auto; position: relative;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 20px;
+      padding: .3rem 1rem;
+      font-size: .8rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 6vw, 3.8rem);
+      font-weight: 900;
+      margin-bottom: 1rem;
+    }
+    .hero h1 span { color: var(--kehe-gold); }
+    .hero p {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      opacity: .88;
+      max-width: 640px; margin: 0 auto 2.5rem;
+      line-height: 1.7;
+    }
+
+    .hero-cta-group {
+      display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+    }
+    .btn {
+      padding: .85rem 2rem;
+      border-radius: 50px;
+      font-size: 1rem; font-weight: 700;
+      transition: transform .15s, box-shadow .15s;
+      display: inline-flex; align-items: center; gap: .5rem;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+    .btn-gold {
+      background: var(--kehe-gold); color: var(--kehe-dark);
+    }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid rgba(255,255,255,.7);
+      color: var(--kehe-white);
+    }
+    .btn-outline:hover { border-color: #fff; background: rgba(255,255,255,.1); }
+    .btn-green {
+      background: var(--kehe-green); color: var(--kehe-white);
+    }
+    .btn-green:hover { background: #004f2a; }
+
+    /* ─── Section wrapper ───────────────────────────────────────── */
+    .section { padding: 4rem 1.5rem; }
+    .section-inner { max-width: 1100px; margin: auto; }
+    .section-header { text-align: center; margin-bottom: 2.5rem; }
+    .section-header h2 { font-size: clamp(1.6rem,4vw,2.4rem); margin-bottom: .6rem; }
+    .section-header p  { color: var(--kehe-gray); font-size: 1.05rem; max-width: 600px; margin: auto; line-height: 1.6; }
+    .pill {
+      display: inline-block;
+      background: var(--kehe-green-pale);
+      color: var(--kehe-green);
+      border-radius: 20px; padding: .25rem .9rem;
+      font-size: .78rem; font-weight: 700;
+      letter-spacing: .07em; text-transform: uppercase;
+      margin-bottom: .75rem;
+    }
+
+    /* ─── Finder Section ────────────────────────────────────────── */
+    #finder { background: var(--kehe-white); }
+
+    .finder-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .finder-card {
+      border: 2px solid var(--kehe-green-pale);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      transition: border-color .2s, box-shadow .2s, transform .2s;
+      cursor: pointer;
+      background: var(--kehe-white);
+    }
+    .finder-card:hover {
+      border-color: var(--kehe-green-light);
+      box-shadow: var(--shadow);
+      transform: translateY(-4px);
+    }
+    .finder-card .icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+    .finder-card h3 { font-size: 1.25rem; margin-bottom: .5rem; color: var(--kehe-green); }
+    .finder-card p  { color: var(--kehe-gray); font-size: .93rem; line-height: 1.5; margin-bottom: 1.25rem; }
+    .finder-card .badge {
+      background: var(--kehe-green-pale);
+      color: var(--kehe-green);
+      border-radius: 20px; padding: .2rem .8rem;
+      font-size: .78rem; font-weight: 700;
+    }
+
+    /* ─── Quick Finder Quiz ──────────────────────────────────────── */
+    #quiz-section { background: var(--kehe-cream); }
+
+    .quiz-box {
+      background: var(--kehe-white);
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      box-shadow: var(--shadow);
+      max-width: 700px; margin: auto;
+    }
+    .quiz-step { display: none; }
+    .quiz-step.active { display: block; animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+    .quiz-q {
+      font-size: 1.25rem; font-weight: 700;
+      margin-bottom: 1.5rem; color: var(--kehe-dark);
+    }
+    .quiz-q small { display:block; font-size: .85rem; font-weight: 400; color: var(--kehe-gray); margin-top: .3rem; }
+
+    .quiz-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: .75rem;
+      margin-bottom: 1.75rem;
+    }
+    .q-opt {
+      background: var(--kehe-green-pale);
+      border: 2px solid transparent;
+      border-radius: 10px;
+      padding: .75rem 1rem;
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--kehe-green);
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .q-opt:hover, .q-opt.selected {
+      border-color: var(--kehe-green);
+      background: #c8e8d5;
+    }
+
+    .quiz-progress {
+      display: flex; gap: .4rem; margin-bottom: 2rem;
+    }
+    .quiz-progress span {
+      flex: 1; height: 4px; border-radius: 2px;
+      background: var(--kehe-green-pale);
+      transition: background .3s;
+    }
+    .quiz-progress span.done { background: var(--kehe-green-light); }
+
+    .quiz-nav {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .btn-sm {
+      padding: .55rem 1.25rem;
+      border-radius: 30px;
+      font-size: .9rem; font-weight: 700;
+    }
+
+    /* ─── Safe Snack Builder ────────────────────────────────────── */
+    #builder { background: var(--kehe-white); }
+
+    .builder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.75rem;
+      margin-bottom: 2rem;
+    }
+    .builder-group h4 {
+      font-size: .8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--kehe-gray);
+      margin-bottom: .9rem;
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .chip-wrap { display: flex; flex-wrap: wrap; gap: .55rem; }
+    .chip {
+      padding: .4rem 1rem;
+      border-radius: 20px;
+      border: 2px solid var(--kehe-green-pale);
+      font-size: .85rem; font-weight: 600;
+      color: var(--kehe-gray);
+      background: var(--kehe-white);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .chip:hover { border-color: var(--kehe-green-light); color: var(--kehe-green); }
+    .chip.active {
+      background: var(--kehe-green);
+      border-color: var(--kehe-green);
+      color: var(--kehe-white);
+    }
+
+    .builder-cta { text-align: center; }
+
+    /* ─── Results ──────────────────────────────────────────────── */
+    #results { background: var(--kehe-cream); display: none; }
+    #results.show { display: block; }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .result-card {
+      background: var(--kehe-white);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: transform .2s;
+    }
+    .result-card:hover { transform: translateY(-4px); }
+    .result-card-top {
+      background: linear-gradient(135deg, var(--kehe-green) 0%, var(--kehe-green-light) 100%);
+      padding: 1.5rem;
+      color: var(--kehe-white);
+    }
+    .result-card-top h3 { font-size: 1.1rem; margin-bottom: .3rem; }
+    .result-card-top small { opacity: .8; font-size: .82rem; }
+
+    .result-card-body { padding: 1.25rem; }
+
+    .safe-badge {
+      display: inline-block;
+      background: #e3f5ec;
+      color: var(--kehe-green);
+      border-radius: 6px;
+      padding: .18rem .55rem;
+      font-size: .78rem;
+      font-weight: 700;
+      margin: .2rem .2rem .2rem 0;
+    }
+    .safe-label {
+      font-size: .78rem; font-weight: 700;
+      color: var(--kehe-gray); text-transform: uppercase;
+      letter-spacing: .08em; margin-bottom: .4rem;
+    }
+    .location-tag {
+      margin-top: 1rem;
+      background: var(--kehe-green-pale);
+      border-radius: 8px;
+      padding: .55rem .8rem;
+      font-size: .83rem;
+      color: var(--kehe-green);
+      display: flex; align-items: center; gap: .4rem;
+      font-weight: 600;
+    }
+
+    /* ─── Bonus Features ────────────────────────────────────────── */
+    #bonus { background: var(--kehe-green); color: var(--kehe-white); }
+    #bonus .section-header h2 { color: var(--kehe-white); }
+    #bonus .section-header p  { color: rgba(255,255,255,.75); }
+
+    .bonus-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.25rem;
+    }
+    .bonus-card {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.25rem;
+      text-align: center;
+      transition: background .2s, transform .2s;
+    }
+    .bonus-card:hover { background: rgba(255,255,255,.18); transform: translateY(-3px); }
+    .bonus-card .icon { font-size: 2.2rem; margin-bottom: .75rem; display: block; }
+    .bonus-card h4 { font-size: .95rem; margin-bottom: .35rem; }
+    .bonus-card p  { font-size: .8rem; opacity: .75; line-height: 1.5; }
+
+    /* ─── QR Banner ─────────────────────────────────────────────── */
+    #qr-banner {
+      background: var(--kehe-dark);
+      color: var(--kehe-white);
+      padding: 3.5rem 1.5rem;
+      text-align: center;
+    }
+    #qr-banner h2 { font-size: clamp(1.4rem,3.5vw,2rem); margin-bottom: .75rem; }
+    #qr-banner p  { opacity: .75; max-width: 560px; margin: 0 auto 2rem; line-height: 1.6; }
+    .qr-spots {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem;
+      margin-bottom: 2rem;
+    }
+    .qr-spot {
+      background: rgba(255,255,255,.1);
+      border-radius: 20px; padding: .4rem 1rem;
+      font-size: .85rem; font-weight: 600;
+    }
+    .qr-mock {
+      width: 100px; height: 100px;
+      background: var(--kehe-white);
+      border-radius: 10px;
+      margin: 0 auto;
+      display: grid; place-items: center;
+      font-size: .65rem; color: var(--kehe-dark);
+      font-weight: 700; letter-spacing: .05em;
+      box-shadow: 0 4px 20px rgba(0,0,0,.3);
+      background-image:
+        repeating-linear-gradient(0deg,   rgba(0,0,0,.12) 0px, rgba(0,0,0,.12) 3px, transparent 3px, transparent 10px),
+        repeating-linear-gradient(90deg,  rgba(0,0,0,.12) 0px, rgba(0,0,0,.12) 3px, transparent 3px, transparent 10px);
+    }
+
+    /* ─── Pitch Footer ──────────────────────────────────────────── */
+    footer {
+      background: var(--kehe-dark);
+      color: rgba(255,255,255,.6);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      font-size: .85rem;
+    }
+    footer strong { color: var(--kehe-white); }
+    footer .pitch-quote {
+      font-style: italic;
+      max-width: 700px; margin: .75rem auto 0;
+      line-height: 1.7;
+      color: rgba(255,255,255,.8);
+    }
+
+    .btn-outline-green {
+      border: 2px solid var(--kehe-green);
+      color: var(--kehe-green);
+      background: transparent;
+    }
+    .btn-outline-green:hover { background: var(--kehe-green-pale); }
+
+
+    .reveal {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity .55s ease, transform .55s ease;
+    }
+    .reveal.in-view { opacity: 1; transform: none; }
+
+    /* ─── Responsive ────────────────────────────────────────────── */
+    @media (max-width: 680px) {
+      .nav-links { display: none; }
+      .hero-cta-group .btn { flex: 1 1 100%; text-align: center; }
+      .quiz-box { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       INTRO / LOCK SCREEN
+  ═══════════════════════════════════════════════════════════════════ -->
+  <div id="intro-screen" role="dialog" aria-modal="true" aria-label="Enter SnackSafe">
+
+    <!-- floating leaf decoration -->
+    <div class="leaf-bg" aria-hidden="true" id="leaf-container"></div>
+
+    <p class="intro-tagline">Powered by KeHE Distributors</p>
+
+    <h1 class="intro-title">
+      Find your <span>organic snack</span><br>in 60 seconds — filtered for YOU.
+    </h1>
+
+    <button id="lock-btn" onclick="unlockSite()" aria-label="Click to enter SnackSafe">
+      <!-- SVG Lock -->
+      <svg class="lock-icon" id="lock-svg" viewBox="0 0 130 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- Shackle (arc) -->
+        <path class="lock-shackle" id="lock-shackle"
+          d="M35,80 L35,52 C35,25 95,25 95,52 L95,80" />
+        <!-- Body -->
+        <rect class="lock-body-rect" x="16" y="76" width="98" height="72" rx="12" />
+        <!-- Keyhole -->
+        <circle class="lock-keyhole" cx="65" cy="108" r="10" />
+        <rect class="lock-keyhole" x="60" y="108" width="10" height="20" rx="5" />
+      </svg>
+      <span class="lock-label">Enter the SnackSafe</span>
+    </button>
+
+    <p class="intro-hint">click the lock to enter →</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       MAIN SITE
+  ═══════════════════════════════════════════════════════════════════ -->
+  <div id="main-site">
+
+    <!-- ── Navigation ─────────────────────────────────────────── -->
+    <nav id="nav" aria-label="Main navigation">
+      <div class="nav-inner">
+        <div class="nav-logo">Snack<span>Safe™</span></div>
+        <ul class="nav-links">
+          <li><a href="#finder">Snack Finder</a></li>
+          <li><a href="#builder">Safe Snack Builder</a></li>
+          <li><a href="#bonus">Features</a></li>
+          <li><a href="#qr-banner">For Stores</a></li>
+          <li><a href="#finder" class="nav-cta">Start Now</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- ── Hero ───────────────────────────────────────────────── -->
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="hero-badge">🌱 KeHE × SnackSafe™</div>
+        <h1>The <span>Organic Snack</span><br>Decision System</h1>
+        <p>
+          Not a product list. A personalized snack discovery experience —
+          matched to your hunger, mood, diet, and allergy needs in under 60 seconds.
+        </p>
+        <div class="hero-cta-group">
+          <a href="#quiz-section" class="btn btn-gold">⚡ Quick Snack Finder</a>
+          <a href="#builder" class="btn btn-outline">🛡 Build My Safe Snack List</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Choose Mode ─────────────────────────────────────────── -->
+    <section id="finder" class="section">
+      <div class="section-inner">
+        <div class="section-header reveal">
+          <div class="pill">instant start</div>
+          <h2>How do you want to snack today?</h2>
+          <p>Choose speed or safety — SnackSafe handles the rest.</p>
+        </div>
+        <div class="finder-cards reveal">
+          <div class="finder-card" onclick="document.getElementById('quiz-section').scrollIntoView({behavior:'smooth'})">
+            <span class="icon">⚡</span>
+            <h3>Quick Snack Finder</h3>
+            <p>Answer 4 fast questions. Get 3 perfectly matched organic snacks instantly.</p>
+            <span class="badge">~60 seconds</span>
+          </div>
+          <div class="finder-card" onclick="document.getElementById('builder').scrollIntoView({behavior:'smooth'})">
+            <span class="icon">🛡</span>
+            <h3>Safe Snack Builder</h3>
+            <p>Select your allergies and diet preferences. Only snacks that are 100% safe for you will appear.</p>
+            <span class="badge">Allergy-safe</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Quick Snack Finder Quiz ─────────────────────────────── -->
+    <section id="quiz-section" class="section">
+      <div class="section-inner">
+        <div class="section-header reveal">
+          <div class="pill">⚡ Quick Finder</div>
+          <h2>Find Your Snack in 60 Seconds</h2>
+          <p>Four quick questions — we'll generate your perfect organic snack matches.</p>
+        </div>
+
+        <div class="quiz-box reveal" id="quiz-box">
+          <!-- Progress bar -->
+          <div class="quiz-progress" aria-hidden="true">
+            <span id="p1" class="done"></span>
+            <span id="p2"></span>
+            <span id="p3"></span>
+            <span id="p4"></span>
+          </div>
+
+          <!-- Step 1: Hunger -->
+          <div class="quiz-step active" id="step1">
+            <p class="quiz-q">How hungry are you right now?
+              <small>Select the one that fits best</small>
+            </p>
+            <div class="quiz-options">
+              <div class="q-opt" data-step="1" data-val="light">😌 A little peckish</div>
+              <div class="q-opt" data-step="1" data-val="medium">🙂 Pretty hungry</div>
+              <div class="q-opt" data-step="1" data-val="high">😤 Starving!</div>
+              <div class="q-opt" data-step="1" data-val="thirsty">🥤 More thirsty</div>
+            </div>
+            <div class="quiz-nav">
+              <span></span>
+              <button class="btn btn-green btn-sm" onclick="nextStep(2)">Next →</button>
+            </div>
+          </div>
+
+          <!-- Step 2: Mood -->
+          <div class="quiz-step" id="step2">
+            <p class="quiz-q">What's your vibe right now?
+              <small>Pick your current mood</small>
+            </p>
+            <div class="quiz-options">
+              <div class="q-opt" data-step="2" data-val="energized">⚡ Need energy</div>
+              <div class="q-opt" data-step="2" data-val="relaxed">😌 Just chilling</div>
+              <div class="q-opt" data-step="2" data-val="focused">🧠 Need to focus</div>
+              <div class="q-opt" data-step="2" data-val="comfort">🤗 Comfort food</div>
+            </div>
+            <div class="quiz-nav">
+              <button class="btn btn-outline-green btn-sm" onclick="prevStep(1)">← Back</button>
+              <button class="btn btn-green btn-sm" onclick="nextStep(3)">Next →</button>
+            </div>
+          </div>
+
+          <!-- Step 3: Flavor -->
+          <div class="quiz-step" id="step3">
+            <p class="quiz-q">Sweet, salty, or filling?
+              <small>What sounds good right now?</small>
+            </p>
+            <div class="quiz-options">
+              <div class="q-opt" data-step="3" data-val="sweet">🍫 Sweet treat</div>
+              <div class="q-opt" data-step="3" data-val="salty">🥨 Salty crunch</div>
+              <div class="q-opt" data-step="3" data-val="filling">🥜 Something filling</div>
+              <div class="q-opt" data-step="3" data-val="fresh">🍎 Light & fresh</div>
+            </div>
+            <div class="quiz-nav">
+              <button class="btn btn-outline-green btn-sm" onclick="prevStep(2)">← Back</button>
+              <button class="btn btn-green btn-sm" onclick="nextStep(4)">Next →</button>
+            </div>
+          </div>
+
+          <!-- Step 4: Time of day -->
+          <div class="quiz-step" id="step4">
+            <p class="quiz-q">What time is it where you are?
+              <small>We'll refine your recommendations</small>
+            </p>
+            <div class="quiz-options">
+              <div class="q-opt" data-step="4" data-val="morning">🌅 Morning (6–11am)</div>
+              <div class="q-opt" data-step="4" data-val="midday">☀️ Midday (11am–2pm)</div>
+              <div class="q-opt" data-step="4" data-val="afternoon">🌤 Afternoon (2–6pm)</div>
+              <div class="q-opt" data-step="4" data-val="evening">🌙 Evening (6pm+)</div>
+            </div>
+            <div class="quiz-nav">
+              <button class="btn btn-outline-green btn-sm" onclick="prevStep(3)">← Back</button>
+              <button class="btn btn-gold btn-sm" onclick="runQuiz()">🎯 Show My Snacks!</button>
+            </div>
+          </div>
+
+          <!-- Results placeholder -->
+          <div class="quiz-step" id="step-results">
+            <p class="quiz-q" style="color: var(--kehe-green);">🎉 Your Organic Snack Matches</p>
+            <div id="quiz-results-inner"></div>
+            <div style="text-align:center; margin-top:1.5rem;">
+              <button class="btn btn-outline-green btn-sm" onclick="resetQuiz()">↩ Start Over</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Safe Snack Builder ───────────────────────────────────── -->
+    <section id="builder" class="section">
+      <div class="section-inner">
+        <div class="section-header reveal">
+          <div class="pill">🛡 Safe Snack Builder</div>
+          <h2>Build Your Safe Snack Profile</h2>
+          <p>Select your allergies and dietary preferences — we'll filter everything for you.</p>
+        </div>
+
+        <div class="quiz-box reveal" style="max-width: 860px;">
+          <div class="builder-grid">
+
+            <div class="builder-group">
+              <h4>🥛 Allergies to avoid</h4>
+              <div class="chip-wrap">
+                <div class="chip" data-filter="dairy-free"   onclick="toggleChip(this)">🥛 Dairy Free</div>
+                <div class="chip" data-filter="nut-free"     onclick="toggleChip(this)">🥜 Nut Free</div>
+                <div class="chip" data-filter="gluten-free"  onclick="toggleChip(this)">🌾 Gluten Free</div>
+                <div class="chip" data-filter="soy-free"     onclick="toggleChip(this)">🫘 Soy Free</div>
+                <div class="chip" data-filter="egg-free"     onclick="toggleChip(this)">🥚 Egg Free</div>
+              </div>
+            </div>
+
+            <div class="builder-group">
+              <h4>🌿 Diet preferences</h4>
+              <div class="chip-wrap">
+                <div class="chip" data-filter="vegan"        onclick="toggleChip(this)">🌱 Vegan</div>
+                <div class="chip" data-filter="keto"         onclick="toggleChip(this)">🥑 Keto</div>
+                <div class="chip" data-filter="low-sugar"    onclick="toggleChip(this)">📉 Low Sugar</div>
+                <div class="chip" data-filter="high-protein" onclick="toggleChip(this)">💪 High Protein</div>
+                <div class="chip active" data-filter="organic-only" onclick="toggleChip(this)">🌿 Organic Only</div>
+              </div>
+            </div>
+
+            <div class="builder-group">
+              <h4>✨ Bonus filters</h4>
+              <div class="chip-wrap">
+                <div class="chip" data-filter="kids-safe"    onclick="toggleChip(this)">🧒 Kids-Safe</div>
+                <div class="chip" data-filter="budget"       onclick="toggleChip(this)">💰 Budget-Friendly</div>
+                <div class="chip" data-filter="road-trip"    onclick="toggleChip(this)">🚗 Road Trip Mode</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="builder-cta">
+            <button class="btn btn-gold" onclick="runBuilder()" style="font-size:1.05rem;">
+              👉 Show Me Safe Snacks
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Results (shared) ─────────────────────────────────────── -->
+    <section id="results" class="section">
+      <div class="section-inner">
+        <div class="section-header">
+          <div class="pill">✅ Your Results</div>
+          <h2 id="results-headline">Safe Snack Matches for You</h2>
+          <p id="results-subline">Based on your profile — only snacks that are 100% safe for you.</p>
+        </div>
+        <div class="results-grid" id="results-grid"></div>
+        <div style="text-align:center; margin-top:2rem;">
+          <button class="btn btn-outline-green btn-sm" style="font-size:.9rem;" onclick="clearResults()">↩ Adjust My Filters</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Bonus Features ──────────────────────────────────────── -->
+    <section id="bonus" class="section">
+      <div class="section-inner">
+        <div class="section-header reveal">
+          <div class="pill" style="background:rgba(255,255,255,.15); color:#fff;">🔥 Coming Features</div>
+          <h2>What Makes SnackSafe™ Unstoppable</h2>
+          <p>From competition pitch to national organic convenience infrastructure.</p>
+        </div>
+        <div class="bonus-grid reveal">
+          <div class="bonus-card">
+            <span class="icon">🌦</span>
+            <h4>AI Weather Snacks</h4>
+            <p>Snack suggestions based on local weather and time of day — automatically.</p>
+          </div>
+          <div class="bonus-card">
+            <span class="icon">🚗</span>
+            <h4>Road Trip Mode</h4>
+            <p>Pack smart. Get a list of shelf-stable organic snacks for long drives.</p>
+          </div>
+          <div class="bonus-card">
+            <span class="icon">🧒</span>
+            <h4>Kids-Safe Filter</h4>
+            <p>Only snacks that are safe, low-sugar, and kid-approved. Parents love this.</p>
+          </div>
+          <div class="bonus-card">
+            <span class="icon">💰</span>
+            <h4>Budget Filter</h4>
+            <p>Organic doesn't have to break the bank. Filter for affordable picks under $3.</p>
+          </div>
+          <div class="bonus-card">
+            <span class="icon">📷</span>
+            <h4>Scan Any Snack</h4>
+            <p>Point your camera at any snack — instantly see a KeHE organic alternative.</p>
+          </div>
+          <div class="bonus-card">
+            <span class="icon">⭐</span>
+            <h4>Loyalty Rewards</h4>
+            <p>Try organic. Earn points. Unlock exclusive KeHE brand deals at checkout.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── QR / Store Banner ────────────────────────────────────── -->
+    <section id="qr-banner">
+      <div style="max-width: 700px; margin: auto;">
+        <h2>📱 SnackSafe™ In Every Convenience Store</h2>
+        <p>
+          QR codes placed at drink coolers, snack aisles, checkout counters, and gas pumps.
+          Scan → instantly filter → buy. No app, no account, no friction.
+        </p>
+        <div class="qr-spots">
+          <span class="qr-spot">🧊 Drink Coolers</span>
+          <span class="qr-spot">🍫 Snack Aisles</span>
+          <span class="qr-spot">🏪 Checkout Counters</span>
+          <span class="qr-spot">⛽ Gas Pumps</span>
+        </div>
+        <div class="qr-mock" aria-label="Sample QR code">
+          <span>SCAN ME</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Footer ──────────────────────────────────────────────── -->
+    <footer>
+      <strong>SnackSafe™ by KeHE</strong> &nbsp;·&nbsp; Competition Pitch Concept &nbsp;·&nbsp; 2024
+      <p class="pitch-quote">
+        "SnackSafe is an interactive KeHE-powered website that helps convenience-store shoppers
+        instantly find organic snacks matched to their hunger, preferences, and allergy-safe
+        dietary needs in under 60 seconds."
+      </p>
+    </footer>
+
+  </div><!-- /main-site -->
+
+  <!-- ══════════════════════════════════════════════════════════════
+       JAVASCRIPT
+  ═══════════════════════════════════════════════════════════════════ -->
+  <script>
+    /* ── Floating leaf background ───────────────────────────────── */
+    (function () {
+      var container = document.getElementById('leaf-container');
+      var leafChars = ['🌿', '🍃', '🌱'];
+      for (var i = 0; i < 18; i++) {
+        var s = document.createElement('span');
+        s.textContent = leafChars[i % 3];
+        s.style.left = (Math.random() * 100) + 'vw';
+        s.style.animationDuration = (10 + Math.random() * 18) + 's';
+        s.style.animationDelay = '-' + (Math.random() * 20) + 's';
+        s.style.fontSize = (1.2 + Math.random() * 1.4) + 'rem';
+        container.appendChild(s);
+      }
+    }());
+
+    /* ── Lock / Unlock ──────────────────────────────────────────── */
+    function unlockSite() {
+      var lockSvg  = document.getElementById('lock-svg');
+      var intro    = document.getElementById('intro-screen');
+      var mainSite = document.getElementById('main-site');
+
+      // Animate shackle open
+      lockSvg.classList.add('unlocked');
+
+      setTimeout(function () {
+        intro.classList.add('fade-out');
+        mainSite.classList.add('visible');
+        document.body.style.overflow = '';
+      }, 550);
+
+      setTimeout(function () {
+        intro.style.display = 'none';
+        intro.setAttribute('aria-hidden', 'true');
+        mainSite.removeAttribute('aria-hidden');
+      }, 1400);
+    }
+
+    // Prevent body scroll while intro is showing
+    document.body.style.overflow = 'hidden';
+
+    /* ── Scroll reveal ──────────────────────────────────────────── */
+    (function () {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('in-view'); }
+        });
+      }, { threshold: 0.12 });
+      document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+    }());
+
+    /* ── Quiz State ─────────────────────────────────────────────── */
+    var quizAnswers = {};
+
+    function nextStep(n) {
+      document.querySelector('.quiz-step.active').classList.remove('active');
+      document.getElementById('step' + n).classList.add('active');
+      // update progress
+      for (var i = 1; i <= 4; i++) {
+        document.getElementById('p' + i).classList.toggle('done', i < n);
+      }
+    }
+    function prevStep(n) { nextStep(n); }
+
+    document.querySelectorAll('.q-opt').forEach(function (opt) {
+      opt.addEventListener('click', function () {
+        var step = this.getAttribute('data-step');
+        document.querySelectorAll('.q-opt[data-step="' + step + '"]').forEach(function (o) { o.classList.remove('selected'); });
+        this.classList.add('selected');
+        quizAnswers[step] = this.getAttribute('data-val');
+      });
+    });
+
+    var snackDatabase = [
+      {
+        name: 'Organic Mango Chili Jerky',
+        brand: 'Wild Roots × KeHE',
+        tags: ['gluten-free','dairy-free','high-protein','organic-only'],
+        moods: ['energized','focused'],
+        flavors: ['salty','filling'],
+        hungers: ['medium','high'],
+        location: 'Usually stocked near the checkout rack',
+        why: ['gluten free','dairy free','high protein','certified organic'],
+        emoji: '🌶'
+      },
+      {
+        name: 'Organic Dark Chocolate Almond Bites',
+        brand: 'Theo Organics × KeHE',
+        tags: ['vegan','gluten-free','organic-only'],
+        moods: ['relaxed','comfort'],
+        flavors: ['sweet'],
+        hungers: ['light','medium'],
+        location: 'Candy & snack aisle',
+        why: ['vegan','gluten free','certified organic'],
+        emoji: '🍫'
+      },
+      {
+        name: 'Organic Peanut-Free Energy Bar',
+        brand: 'Larabar × KeHE',
+        tags: ['nut-free','dairy-free','gluten-free','vegan','organic-only'],
+        moods: ['energized','focused'],
+        flavors: ['sweet','filling'],
+        hungers: ['medium','high'],
+        location: 'Near coffee station / energy section',
+        why: ['nut free','dairy free','gluten free','certified organic'],
+        emoji: '⚡'
+      },
+      {
+        name: 'Organic Popped Rice Crisps',
+        brand: 'LesserEvil × KeHE',
+        tags: ['gluten-free','vegan','low-sugar','organic-only'],
+        moods: ['relaxed','comfort'],
+        flavors: ['salty','fresh'],
+        hungers: ['light','medium'],
+        location: 'Chip & snack aisle',
+        why: ['gluten free','vegan','low sugar','certified organic'],
+        emoji: '🍚'
+      },
+      {
+        name: 'Organic Cashew Butter Squeeze Pack',
+        brand: 'Once Again × KeHE',
+        tags: ['dairy-free','egg-free','vegan','keto','high-protein','organic-only'],
+        moods: ['energized','focused'],
+        flavors: ['filling','fresh'],
+        hungers: ['medium','high'],
+        location: 'Natural foods section',
+        why: ['dairy free','egg free','vegan','keto-friendly','high protein'],
+        emoji: '🥜'
+      },
+      {
+        name: 'Organic Cold Brew Protein Shake',
+        brand: 'REBBL × KeHE',
+        tags: ['dairy-free','vegan','high-protein','organic-only'],
+        moods: ['energized','focused'],
+        flavors: ['sweet','filling'],
+        hungers: ['thirsty','medium'],
+        location: 'Beverage cooler',
+        why: ['dairy free','vegan','high protein','certified organic'],
+        emoji: '☕'
+      }
+    ];
+
+    function runQuiz() {
+      var hunger = quizAnswers['1'] || 'medium';
+      var mood   = quizAnswers['2'] || 'energized';
+      var flavor = quizAnswers['3'] || 'sweet';
+
+      var scored = snackDatabase.map(function (s) {
+        var score = 0;
+        if (s.hungers.indexOf(hunger) > -1) score += 2;
+        if (s.moods.indexOf(mood)     > -1) score += 2;
+        if (s.flavors.indexOf(flavor) > -1) score += 3;
+        return { snack: s, score: score };
+      }).sort(function (a, b) { return b.score - a.score; });
+
+      var top3 = scored.slice(0, 3).map(function (x) { return x.snack; });
+      renderQuizResults(top3);
+    }
+
+    function renderQuizResults(snacks) {
+      var container = document.getElementById('quiz-results-inner');
+      container.innerHTML = snacks.map(function (s) {
+        return '<div style="border:2px solid var(--kehe-green-pale); border-radius:10px; padding:1rem; margin-bottom:.85rem;">' +
+               '<strong>' + s.emoji + ' ' + s.name + '</strong>' +
+               '<div style="font-size:.8rem; color:var(--kehe-gray); margin:.25rem 0 .5rem;">' + s.brand + '</div>' +
+               s.why.map(function (w) { return '<span class="safe-badge">✔ ' + w + '</span>'; }).join('') +
+               '<div class="location-tag">📍 ' + s.location + '</div>' +
+               '</div>';
+      }).join('');
+      nextStepFinal();
+    }
+
+    function nextStepFinal() {
+      document.querySelector('.quiz-step.active').classList.remove('active');
+      document.getElementById('step-results').classList.add('active');
+      for (var i = 1; i <= 4; i++) document.getElementById('p' + i).classList.add('done');
+    }
+
+    function resetQuiz() {
+      quizAnswers = {};
+      document.querySelectorAll('.q-opt').forEach(function (o) { o.classList.remove('selected'); });
+      document.querySelector('.quiz-step.active').classList.remove('active');
+      document.getElementById('step1').classList.add('active');
+      for (var i = 1; i <= 4; i++) {
+        document.getElementById('p' + i).classList.toggle('done', i === 1);
+      }
+    }
+
+    /* ── Builder Chips ──────────────────────────────────────────── */
+    function toggleChip(el) {
+      el.classList.toggle('active');
+    }
+
+    function runBuilder() {
+      var active = document.querySelectorAll('.chip.active');
+      var filters = Array.prototype.map.call(active, function (c) { return c.getAttribute('data-filter'); });
+
+      var matched = snackDatabase.filter(function (s) {
+        if (filters.length === 0) return true;
+        return filters.every(function (f) {
+          return s.tags.indexOf(f) > -1;
+        });
+      });
+
+      if (matched.length === 0) {
+        matched = snackDatabase.slice(0, 3); // fallback
+      }
+
+      renderBuilderResults(matched, filters);
+    }
+
+    function renderBuilderResults(snacks, filters) {
+      var grid = document.getElementById('results-grid');
+      var section = document.getElementById('results');
+
+      document.getElementById('results-headline').textContent = 'Safe Snack Matches for You';
+      document.getElementById('results-subline').textContent =
+        'Filtered by: ' + (filters.length ? filters.map(function (f) { return f.replace(/-/g,' '); }).join(', ') : 'all organic snacks') + ' — ' + snacks.length + ' snack' + (snacks.length !== 1 ? 's' : '') + ' found.';
+
+      grid.innerHTML = snacks.map(function (s) {
+        return '<div class="result-card">' +
+               '<div class="result-card-top">' +
+               '<h3>' + s.emoji + ' ' + s.name + '</h3>' +
+               '<small>' + s.brand + '</small>' +
+               '</div>' +
+               '<div class="result-card-body">' +
+               '<div class="safe-label">Safe for you because:</div>' +
+               s.why.map(function (w) { return '<span class="safe-badge">✔ ' + w + '</span>'; }).join('') +
+               '<div class="location-tag">📍 ' + s.location + '</div>' +
+               '</div>' +
+               '</div>';
+      }).join('');
+
+      section.classList.add('show');
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function clearResults() {
+      document.getElementById('results').classList.remove('show');
+      document.getElementById('builder').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    /* ── Nav active link on scroll ──────────────────────────────── */
+    (function () {
+      var sections = ['finder','quiz-section','builder','bonus','qr-banner'];
+      var links = document.querySelectorAll('.nav-links a:not(.nav-cta)');
+      window.addEventListener('scroll', function () {
+        var scrollY = window.scrollY + 100;
+        sections.forEach(function (id, idx) {
+          var el = document.getElementById(id);
+          if (el && scrollY >= el.offsetTop && scrollY < el.offsetTop + el.offsetHeight) {
+            links.forEach(function (l) { l.classList.remove('active'); });
+            if (links[idx]) links[idx].classList.add('active');
+          }
+        });
+      }, { passive: true });
+    }());
+  </script>
+</body>
+</html>
